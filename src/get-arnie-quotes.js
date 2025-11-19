@@ -25,14 +25,26 @@ const HTTP_STATUS = {
  * @returns {Promise<Object>} - Object with either 'Arnie Quote' or 'FAILURE' key
  */
 const fetchQuote = async (url) => {
-  const response = await httpGet(url);
-  const { message } = JSON.parse(response.body);
+  try {
+    const response = await httpGet(url);
 
-  if (response.status === HTTP_STATUS.OK) {
-    return { [RESPONSE_KEYS.SUCCESS]: message };
+    let message;
+    try {
+      const body = JSON.parse(response.body);
+      message = body.message;
+    } catch {
+      return { [RESPONSE_KEYS.FAILURE]: 'Invalid response format' };
+    }
+
+    if (response.status === HTTP_STATUS.OK) {
+      return { [RESPONSE_KEYS.SUCCESS]: message };
+    }
+
+    return { [RESPONSE_KEYS.FAILURE]: message };
+  } catch (error) {
+    // Handle network errors or httpGet throwing
+    return { [RESPONSE_KEYS.FAILURE]: error.message || 'Unknown error' };
   }
-
-  return { [RESPONSE_KEYS.FAILURE]: message };
 };
 
 /**
